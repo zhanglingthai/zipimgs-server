@@ -2,30 +2,38 @@ var express = require('express');
 var router = express.Router();
 const createError = require('http-errors');
 const busboy = require('busboy');
-const path = require('path')
-const fs = require('fs')
+const path = require('path');
+const fs = require('fs');
+const moment = require('moment');
+const { mkdirsSync } = require('../common/util');
 
 router.post('/', function (req, res, next) {
 
     try {
         const bb = busboy({ headers: req.headers });
+        let totalLen = 0;//文件总大小
 
         bb.on('file', (name, file, info) => {
             const { filename, encoding, mimeType } = info;
-            console.log(
-                `File [${name}]: filename: %j, encoding: %j, mimeType: %j`,
-                filename,
-                encoding,
-                mimeType
-            );
+
+            // console.log(
+            //     `File [${name}]: filename: %j, encoding: %j, mimeType: %j`,
+            //     filename,
+            //     encoding,
+            //     mimeType
+            // );
 
             file.on('data', (data) => {
-                console.log(`File [${name}] got ${data.length} bytes`);
+                totalLen += data.length;
+                // console.log(`File [${name}] got ${data.length} bytes`);
             }).on('close', () => {
-                console.log(`File [${name}] done`);
+                console.log(`File [${name}] done , total length: ${totalLen} `);
             });
 
-            const saveTo = path.join(__dirname, '../', 'uploads', filename);
+
+            let savePath = path.join(__dirname, '../', 'uploads', moment().format("YYYY-MM-DD"));
+            mkdirsSync(savePath);
+            const saveTo = path.join(savePath, new Date().getTime() + '-' + filename);
             file.pipe(fs.createWriteStream(saveTo));
         });
 
@@ -34,9 +42,14 @@ router.post('/', function (req, res, next) {
         });
 
         bb.on('close', () => {
-            res.json({
-                success: true
-            });
+            if (totalLen) {
+                res.json({
+                    success: true
+                });
+            } else {
+                next(createError(500, 'file is empty'));
+            }
+
         });
 
         req.pipe(bb);
