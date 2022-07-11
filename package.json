@@ -1,6 +1,6 @@
 {
   "name": "zipimgs",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "start": "cross-env NODE_ENV=production nodemon ./bin/www",
@@ -15,11 +15,22 @@
     "express": "~4.16.1",
     "file-stream-rotator": "^0.6.1",
     "http-errors": "~1.6.3",
+    "imagemin": "^7.0.1",
+    "imagemin-gifsicle": "^7.0.0",
+    "imagemin-jpegtran": "^7.0.0",
+    "imagemin-mozjpeg": "^9.0.0",
+    "imagemin-optipng": "^8.0.0",
+    "imagemin-pngquant": "^9.0.2",
+    "imagemin-svgo": "^9.0.0",
     "moment": "^2.29.4",
     "morgan": "~1.9.1"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
     "nodemon": "^2.0.19"
+  },
+  "nodemonConfig": {
+    "ignore": [],
+    "delay": 1000
   }
 }

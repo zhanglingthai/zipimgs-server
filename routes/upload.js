@@ -1,55 +1,98 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
-const createError = require('http-errors');
-const busboy = require('busboy');
-const path = require('path');
-const fs = require('fs');
-const moment = require('moment');
-const { mkdirsSync } = require('../common/util');
+const createError = require("http-errors");
+const busboy = require("busboy");
+const path = require("path");
+const fs = require("fs");
+const moment = require("moment");
+const { mkdirsSync } = require("../common/util");
+const imgZip = require("../common/imgzip");
 
-router.post('/', function (req, res, next) {
-
+router.post("/", function (req, res, next) {
     try {
         const bb = busboy({ headers: req.headers });
-        let totalLen = 0;//文件总大小
+        const callDate = moment().format("YYYY-MM-DD");//上传日期
+        const callStamp = new Date().getTime().toString();//上传时间戳
+        //存放的目录
+        const saveDir = path.join(
+            __dirname,
+            "../public",
+            "uploads",
+            callDate,
+            callStamp
+        );
+        mkdirsSync(saveDir);
+        //输出的目录
+        const outputDir = path.join(
+            __dirname,
+            "../public",
+            "outputs",
+            callDate,
+            callStamp
+        );
+        mkdirsSync(outputDir);
 
-        bb.on('file', (name, file, info) => {
+        const filesArr = [];
+
+        //有文件的走这边
+        bb.on("file", (name, file, info) => {
             const { filename, encoding, mimeType } = info;
 
-            // console.log(
-            //     `File [${name}]: filename: %j, encoding: %j, mimeType: %j`,
-            //     filename,
-            //     encoding,
-            //     mimeType
-            // );
-
-            file.on('data', (data) => {
-                totalLen += data.length;
-                // console.log(`File [${name}] got ${data.length} bytes`);
-            }).on('close', () => {
-                console.log(`File [${name}] done , total length: ${totalLen} `);
-            });
-
-
-            let savePath = path.join(__dirname, '../', 'uploads', moment().format("YYYY-MM-DD"));
-            mkdirsSync(savePath);
-            const saveTo = path.join(savePath, new Date().getTime() + '-' + filename);
-            file.pipe(fs.createWriteStream(saveTo));
-        });
-
-        bb.on('field', (name, val, info) => {
-            console.log(`Field [${name}]: value: %j`, val);
-        });
-
-        bb.on('close', () => {
-            if (totalLen) {
-                res.json({
-                    success: true
-                });
-            } else {
-                next(createError(500, 'file is empty'));
+            const fileDetail = {
+                mimeType,
+                filename,
+                uploadSize: 0,
+                uploadPath: path.join(
+                    "/uploads",
+                    callDate,
+                    callStamp,
+                    filename,
+                ),
+                outputSize: 0,
+                outputPath: path.join(
+                    "/outputs",
+                    callDate,
+                    callStamp,
+                    filename,
+                )
             }
 
+            const saveTo = path.join(saveDir, filename);
+            file.pipe(fs.createWriteStream(saveTo));
+
+            file
+                .on("data", (data) => {
+                    fileDetail.uploadSize += data.length;
+                    //   console.log(`File [${name}] got ${data.length} bytes`);
+                })
+                .on("close", () => {
+                    filesArr.push(fileDetail);
+                });
+        });
+
+        //没文件的走这边
+        bb.on("field", (name, val, info) => {
+            // console.log(`Field [${name}]: value: %j`, val);
+        });
+
+        //整个表单结束
+        bb.on("close", async () => {
+            //等到都存好了以后，这边做图片压缩
+            if (filesArr.length) {
+                for (let i = 0; i < filesArr.length; i++) {
+                    const file = filesArr[i];
+                    const filename = file.filename;
+                    const filePath = path.join(saveDir,filename);
+                    const zipedFile = await imgZip(filePath,outputDir);
+                    file.outputSize = zipedFile.data.length;
+                }
+                res.json({
+                    success: true,
+                    data: filesArr
+                });
+            } else {
+                next(createError(500, 'no file upload'));
+            }
         });
 
         req.pipe(bb);

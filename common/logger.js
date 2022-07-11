@@ -1,9 +1,7 @@
 // 日志的封装
 // 写入文件中 file-stream-rotator所有日志
-var express = require('express');
 var logger = require('morgan');
 var fileStreamRotato = require('file-stream-rotator')
-var app = express()
 var accessLogStream = fileStreamRotato.getStream({
     filename: './logs/access/%DATE%.log',
     frequency: 'daily',
