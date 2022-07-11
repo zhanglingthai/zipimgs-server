@@ -6,7 +6,8 @@ const { getSuffixName } = require("./util");
 const imageminSvgo = require("imagemin-svgo");
 
 //gif
-const imageminGifsicle = require("imagemin-gifsicle");
+//const imageminGiflossy = require("imagemin-giflossy");
+const imageminGifsicle = require("imagemin-gifsicle");//无损
 
 //jpg
 const imageminMozjpeg = require("imagemin-mozjpeg");//渐进式jpg
@@ -14,7 +15,11 @@ const imageminMozjpeg = require("imagemin-mozjpeg");//渐进式jpg
 
 //png
 const imageminPngquant = require("imagemin-pngquant");
-// const imageminOptipng = require("imagemin-optipng");
+// const imageminOptipng = require("imagemin-optipng");//无损
+
+//webp
+//const imageminWebp = require("imagemin-webp");
+
 
 
 const imgZip = async (filePath, outputPath) => {
