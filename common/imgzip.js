@@ -1,5 +1,6 @@
 const imagemin = require("imagemin");
 const { getSuffixName } = require("./util");
+const path = require("path");
 //压缩插件
 
 //svg
@@ -23,8 +24,7 @@ const imageminPngquant = require("imagemin-pngquant");
 
 
 const imgZip = async (filePath, outputPath) => {
-
-  file = await imagemin([filePath], {
+  const file = await imagemin([filePath.replace(/\\/g, '/')], {
     destination: outputPath,
     plugins: [
       imageminSvgo(),
@@ -35,9 +35,8 @@ const imgZip = async (filePath, outputPath) => {
       }),
     ],
   });
-
+  
   return file[0];
-
 };
 
 module.exports = imgZip;

@@ -13,6 +13,7 @@ router.post("/", function (req, res, next) {
         const bb = busboy({ headers: req.headers });
         const callDate = moment().format("YYYY-MM-DD");//上传日期
         const callStamp = new Date().getTime().toString();//上传时间戳
+        
         //存放的目录
         const saveDir = path.join(
             __dirname,
@@ -21,6 +22,7 @@ router.post("/", function (req, res, next) {
             callDate,
             callStamp
         );
+
         mkdirsSync(saveDir);
         //输出的目录
         const outputDir = path.join(
@@ -42,19 +44,9 @@ router.post("/", function (req, res, next) {
                 mimeType,
                 filename,
                 uploadSize: 0,
-                uploadPath: path.join(
-                    "/uploads",
-                    callDate,
-                    callStamp,
-                    filename,
-                ),
+                uploadPath:`/uploads/${callDate}/${callStamp}/${filename}`,
                 outputSize: 0,
-                outputPath: path.join(
-                    "/outputs",
-                    callDate,
-                    callStamp,
-                    filename,
-                )
+                outputPath: `/outputs/${callDate}/${callStamp}/${filename}`,
             }
 
             const saveTo = path.join(saveDir, filename);
@@ -97,6 +89,7 @@ router.post("/", function (req, res, next) {
 
         req.pipe(bb);
     } catch (err) {
+        console.log(err)
         next(createError(500, err));
     }
 });
