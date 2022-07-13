@@ -7,14 +7,23 @@ const fs = require("fs");
 const moment = require("moment");
 const { mkdirsSync } = require("../common/util");
 const imgZip = require("../common/imgzip");
+const { getSuffixName } = require("../common/util");
 
 router.post("/", function (req, res, next) {
     try {
-        const bb = busboy({ headers: req.headers });
+        const bb = busboy({
+            headers: req.headers,
+            limits: {
+                fields: 99,
+                fileSize: 0.1 * 1024 * 1024,//单文件最大5M
+                files: 16,//最多10个文件
+            }
+        });
+        const limitTypes = ['jpg', 'png', 'gif', 'svg'];//限制格式
         const callDate = moment().format("YYYY-MM-DD");//上传日期
         const callStamp = new Date().getTime().toString();//上传时间戳
-        
-        //存放的目录
+
+        //存放文件目录
         const saveDir = path.join(
             __dirname,
             "../public",
@@ -24,6 +33,7 @@ router.post("/", function (req, res, next) {
         );
 
         mkdirsSync(saveDir);
+
         //输出的目录
         const outputDir = path.join(
             __dirname,
@@ -32,34 +42,45 @@ router.post("/", function (req, res, next) {
             callDate,
             callStamp
         );
+
         mkdirsSync(outputDir);
 
-        const filesArr = [];
+        const filesArr = [];//返回用户的数据
 
         //有文件的走这边
         bb.on("file", (name, file, info) => {
             const { filename, encoding, mimeType } = info;
-
             const fileDetail = {
                 mimeType,
                 filename,
                 uploadSize: 0,
-                uploadPath:`/uploads/${callDate}/${callStamp}/${filename}`,
+                uploadPath: `/uploads/${callDate}/${callStamp}/${filename}`,
                 outputSize: 0,
                 outputPath: `/outputs/${callDate}/${callStamp}/${filename}`,
             }
 
-            const saveTo = path.join(saveDir, filename);
-            file.pipe(fs.createWriteStream(saveTo));
+            if (limitTypes.indexOf(getSuffixName(filename)) > -1) {
 
-            file
-                .on("data", (data) => {
-                    fileDetail.uploadSize += data.length;
-                    //   console.log(`File [${name}] got ${data.length} bytes`);
-                })
-                .on("close", () => {
-                    filesArr.push(fileDetail);
-                });
+                file
+                    .on('limit', function () {
+                        //Clear variables
+                        console.log('limit')
+                    })
+                    .on("data", (data) => {
+                        fileDetail.uploadSize += data.length;
+                        //   console.log(`File [${name}] got ${data.length} bytes`);
+                    })
+                    .on("close", () => {
+                        filesArr.push(fileDetail);
+                    });
+
+                const saveTo = path.join(saveDir, filename);
+                file.pipe(fs.createWriteStream(saveTo));
+
+            } else {
+                file.resume();
+            }
+
         });
 
         //没文件的走这边
@@ -67,16 +88,30 @@ router.post("/", function (req, res, next) {
             // console.log(`Field [${name}]: value: %j`, val);
         });
 
+        // bb.on("filesLimit",()=>{
+        //    console.log('files数量超过限制了')
+        // })
+
+        // bb.on("fieldsLimit",()=>{
+        //     console.log("fields数量超过限制了")
+        // })
+
         //整个表单结束
-        bb.on("close", async () => {
+        bb.on("finish", async () => {
             //等到都存好了以后，这边做图片压缩
             if (filesArr.length) {
                 for (let i = 0; i < filesArr.length; i++) {
                     const file = filesArr[i];
                     const filename = file.filename;
-                    const filePath = path.join(saveDir,filename);
-                    const zipedFile = await imgZip(filePath,outputDir);
-                    file.outputSize = zipedFile.data.length;
+                    const filePath = path.join(saveDir, filename);
+                    try {
+                        const zipedFile = await imgZip(filePath, outputDir);
+                        file.outputSize = zipedFile?.data?.length;
+                        file.success = true;
+                    } catch (err) {
+                        file.msg = 'zip failed';
+                        file.success = false;
+                    }
                 }
                 res.json({
                     success: true,
@@ -95,5 +130,3 @@ router.post("/", function (req, res, next) {
 });
 
 module.exports = router;
-
-//https://blog.poetries.top/node-learning-notes/notes/koa2/-7.3%20%E5%BC%82%E6%AD%A5%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E5%AE%9E%E7%8E%B0.html#%E6%BA%90%E7%A0%81%E7%90%86%E8%A7%A3

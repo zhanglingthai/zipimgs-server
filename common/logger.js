@@ -17,7 +17,9 @@ function formatLog(tokens, req, res) {
         tokens.status(req, res),
         decodeURI(tokens.url(req, res)),
         JSON.stringify(req.body),
-        JSON.stringify(res.locals.error),
+        // JSON.stringify(res.locals.error),
+        JSON.stringify(res.locals.errorMessage),
+        JSON.stringify(res.locals.errorStack),
         tokens.res(req, res, 'content-length'), '-',
         tokens['response-time'](req, res), 'ms'
     ].join(' ')

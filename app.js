@@ -47,36 +47,38 @@ app.use('/upload', uploadRouter);
 app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404, 'address empty'));
+app.use(function (req, res, next) {
+  next(createError(404, 'not found'));
 });
 
 // error handler
 // development模式错误处理
 if (app.get('env') === 'development') {
-  app.use(function(err, req, res, next) {
-      res.locals.message = err.message;
-      res.locals.error = err;
+  app.use(function (err, req, res, next) {
 
-      // render the error page
-      res.status(err.status || 500).json({
-          success: false,
-          status: err.status || 500,
-          msg: err.message
-      })
+    // render the error page
+    res.status(err.status || 500).json({
+      success: false,
+      status: err.status || 500,
+      msg: err.stack
+    })
   });
 }
 
 // production模式错误处理
-app.use(function(err, req, res, next) {
-  res.locals.message = err.message;
-  res.locals.error = {};
+app.use(function (err, req, res, next) {
+  //locals给本地模版用的 可以直接调用message获取 写日志时候也能用
+  res.locals.error = err;
+  res.locals.errorMessage = err.message;
+  res.locals.errorStack = err.stack;
+
+  let status = err.status || 500;
 
   // render the error page
-  res.status(err.status || 500).json({
-      success: false,
-      status: err.status || 500,
-      msg: err.message
+  res.status(status).json({
+    success: false,
+    status: status,
+    msg: err.message
   });
 
 });

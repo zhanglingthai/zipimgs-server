@@ -1,5 +1,4 @@
 const imagemin = require("imagemin");
-const { getSuffixName } = require("./util");
 const path = require("path");
 //压缩插件
 
@@ -7,7 +6,6 @@ const path = require("path");
 const imageminSvgo = require("imagemin-svgo");
 
 //gif
-//const imageminGiflossy = require("imagemin-giflossy");
 const imageminGifsicle = require("imagemin-gifsicle");//无损
 
 //jpg
@@ -21,22 +19,37 @@ const imageminPngquant = require("imagemin-pngquant");
 //webp
 //const imageminWebp = require("imagemin-webp");
 
-
-
 const imgZip = async (filePath, outputPath) => {
-  const file = await imagemin([filePath.replace(/\\/g, '/')], {
-    destination: outputPath,
-    plugins: [
-      imageminSvgo(),
-      imageminGifsicle(),
-      imageminMozjpeg(),
-      imageminPngquant({
-        quality: [0.6, 0.8],
-      }),
-    ],
-  });
-  
-  return file[0];
+  //兼容window，需要替换一次分隔符
+  try {
+    const file = await imagemin([filePath.replace(/\\/g, '/')], {
+      destination: outputPath,
+      plugins: [
+        imageminSvgo({
+          removeViewBox: false
+        }),
+        imageminGifsicle(
+          {
+            interlaced: true,
+            optimizationLevel: 3
+          }
+        ),
+        imageminMozjpeg({
+          quality: 70,
+          progressive: true
+        }),
+        imageminPngquant({
+          quality: [0.65, 0.8],
+        }),
+      ],
+    });
+
+    return file[0];
+
+  } catch (err) {
+    throw new Error(err)
+  }
+
 };
 
 module.exports = imgZip;
