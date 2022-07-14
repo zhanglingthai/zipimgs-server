@@ -19,11 +19,11 @@ const imageminPngquant = require("imagemin-pngquant");
 //webp
 //const imageminWebp = require("imagemin-webp");
 
-const imgZip = async (filePath, outputPath) => {
+const imgZip = async (filePath, outputDir) => {
   //兼容window，需要替换一次分隔符
   try {
     const file = await imagemin([filePath.replace(/\\/g, '/')], {
-      destination: outputPath,
+      destination: outputDir,
       plugins: [
         imageminSvgo({
           removeViewBox: false
@@ -43,10 +43,10 @@ const imgZip = async (filePath, outputPath) => {
         }),
       ],
     });
-
     return file[0];
 
   } catch (err) {
+    app.get('env') === 'development' && console.log(err);
     throw new Error(err)
   }
 

@@ -15,7 +15,7 @@ router.post("/", function (req, res, next) {
             headers: req.headers,
             limits: {
                 fields: 99,
-                fileSize: 0.1 * 1024 * 1024,//单文件最大5M
+                fileSize: 5 * 1024 * 1024,//单文件最大5M
                 files: 16,//最多10个文件
             }
         });
@@ -97,7 +97,7 @@ router.post("/", function (req, res, next) {
         // })
 
         //整个表单结束
-        bb.on("finish", async () => {
+        bb.on("close", async () => {
             //等到都存好了以后，这边做图片压缩
             if (filesArr.length) {
                 for (let i = 0; i < filesArr.length; i++) {
@@ -124,7 +124,6 @@ router.post("/", function (req, res, next) {
 
         req.pipe(bb);
     } catch (err) {
-        console.log(err)
         next(createError(500, err));
     }
 });
