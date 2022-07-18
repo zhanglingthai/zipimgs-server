@@ -39,7 +39,7 @@ const imgZip = async (filePath, outputDir) => {
           progressive: true
         }),
         imageminPngquant({
-          quality: [0.7, 0.85],
+          quality: [0.75, 0.88],
         }),
       ],
     });
