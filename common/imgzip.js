@@ -35,11 +35,11 @@ const imgZip = async (filePath, outputDir) => {
           }
         ),
         imageminMozjpeg({
-          quality: 70,
+          quality: 75,
           progressive: true
         }),
         imageminPngquant({
-          quality: [0.65, 0.8],
+          quality: [0.7, 0.85],
         }),
       ],
     });
