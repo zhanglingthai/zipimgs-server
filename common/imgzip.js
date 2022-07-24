@@ -46,7 +46,7 @@ const imgZip = async (filePath, outputDir) => {
     return file[0];
 
   } catch (err) {
-    app.get('env') === 'development' && console.log(err);
+    process.env.NODE_ENV === 'development' && console.log(err);
     throw new Error(err)
   }
 
