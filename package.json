@@ -22,6 +22,7 @@
     "imagemin-optipng": "^8.0.0",
     "imagemin-pngquant": "^9.0.2",
     "imagemin-svgo": "^9.0.0",
+    "jszip": "^3.10.0",
     "moment": "^2.29.4",
     "morgan": "~1.9.1"
   },
