@@ -105,8 +105,8 @@ router.post("/", function (req, res, next) {
                     const filename = file.filename;
                     const filePath = path.join(saveDir, filename);
                     try {
-                        const zipedFile = await imgZip(filePath, outputDir);
-                        file.outputSize = zipedFile?.data?.length;
+                        const zipedImg = await imgZip(filePath, outputDir);
+                        file.outputSize = zipedImg?.data?.length;
                         file.success = true;
                     } catch (err) {
                         file.msg = 'zip failed';

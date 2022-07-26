@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const ejs = require('ejs');
 const cors = require("cors");
 
+const indexRouter = require('./routes');
 const uploadRouter = require('./routes/upload');
 
 const logger = require('./common/logger');
@@ -40,7 +41,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 //route setup
-// app.use('/', indexRouter);
+app.use('/', indexRouter);
 app.use('/upload', uploadRouter);
 // app.use('/users', usersRouter);
 
