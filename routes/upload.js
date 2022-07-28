@@ -5,23 +5,24 @@ const busboy = require("busboy");
 const path = require("path");
 const fs = require("fs");
 const moment = require("moment");
-const { mkdirsSync } = require("../common/util");
-const imgZip = require("../common/imgzip");
+const { mkdirsSync, rmdirsSync } = require("../common/util");
+const { imgZip } = require("../controller");
 const { getSuffixName } = require("../common/util");
 
-router.post("/", function (req, res, next) {
+router.post("/", function(req, res, next) {
     try {
         const bb = busboy({
             headers: req.headers,
             limits: {
                 fields: 99,
-                fileSize: 5 * 1024 * 1024,//单文件最大5M
-                files: 16,//最多10个文件
+                fileSize: 5 * 1024 * 1024, //单文件最大5M
+                files: 16, //最多10个文件
             }
         });
-        const limitTypes = ['jpg', 'png', 'gif', 'svg'];//限制格式
-        const callDate = moment().format("YYYY-MM-DD");//上传日期
-        const callStamp = new Date().getTime().toString();//上传时间戳
+
+        const limitTypes = ['jpg', 'png', 'gif', 'svg']; //限制格式
+        const callDate = moment().format("YYYY-MM-DD"); //上传日期
+        const callStamp = new Date().getTime().toString(); //上传时间戳
 
         //存放文件目录
         const saveDir = path.join(
@@ -33,6 +34,7 @@ router.post("/", function (req, res, next) {
         );
 
         mkdirsSync(saveDir);
+        rmdirsSync(saveDir);
 
         //输出的目录
         const outputDir = path.join(
@@ -44,8 +46,9 @@ router.post("/", function (req, res, next) {
         );
 
         mkdirsSync(outputDir);
+        rmdirsSync(outputDir);
 
-        const filesArr = [];//返回用户的数据
+        const filesArr = []; //返回用户的数据
 
         //有文件的走这边
         bb.on("file", (name, file, info) => {
@@ -62,7 +65,7 @@ router.post("/", function (req, res, next) {
             if (limitTypes.indexOf(getSuffixName(filename)) > -1) {
 
                 file
-                    .on('limit', function () {
+                    .on('limit', function() {
                         //Clear variables
                         console.log('limit')
                     })
@@ -88,15 +91,6 @@ router.post("/", function (req, res, next) {
             // console.log(`Field [${name}]: value: %j`, val);
         });
 
-        // bb.on("filesLimit",()=>{
-        //    console.log('files数量超过限制了')
-        // })
-
-        // bb.on("fieldsLimit",()=>{
-        //     console.log("fields数量超过限制了")
-        // })
-
-        //整个表单结束
         bb.on("close", async () => {
             //等到都存好了以后，这边做图片压缩
             if (filesArr.length) {
@@ -109,6 +103,7 @@ router.post("/", function (req, res, next) {
                         file.outputSize = zipedImg?.data?.length;
                         file.success = true;
                     } catch (err) {
+                        process.env.NODE_ENV === 'development' && console.log(err);
                         file.msg = 'zip failed';
                         file.success = false;
                     }
@@ -124,6 +119,7 @@ router.post("/", function (req, res, next) {
 
         req.pipe(bb);
     } catch (err) {
+        process.env.NODE_ENV === 'development' && console.log(err);
         next(createError(500, err));
     }
 });

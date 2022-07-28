@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 const { fileZip } = require("../controller");
 const createError = require("http-errors");
+const path = require('path');
+const fs = require('fs');
 
 /* GET home page. */
 // router.get('/', function (req, res, next) {
@@ -9,7 +11,7 @@ const createError = require("http-errors");
 // });
 
 
-router.post('/getzip', async function (req, res, next) {
+router.post('/getzip', async function(req, res, next) {
     const files = req.body.files || [];
 
     if (files.length == 0) {
@@ -17,12 +19,15 @@ router.post('/getzip', async function (req, res, next) {
     }
 
     try {
-        const zipedFile = await fileZip({ files });
-        console.log(zipedFile)
-        res.json({})
+        const zipedFilePath = await fileZip({ files });
+        res.json({
+            success: true,
+            data: zipedFilePath
+        });
     } catch (err) {
-        console.log(err)
-        next(createError(500, '压缩失败'));
+        console.log(333)
+        process.env.NODE_ENV === 'development' && console.log(err);
+        next(createError(500, err));
     }
 
 });

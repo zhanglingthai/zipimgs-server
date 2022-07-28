@@ -1,25 +1,40 @@
 const jszip = require("jszip");
 const path = require('path');
 const fs = require('fs');
+const moment = require("moment");
+const { mkdirsSync, rmdirsSync } = require("../common/util");
 
 const FileZip = ({ files }) => {
     return new Promise((resolve, reject) => {
         const zip = new jszip();
-        console.log(typeof(files))
+        let filesObj = JSON.parse(files);
+        const callDate = moment().format("YYYY-MM-DD"); //上传日期
+        const callStamp = new Date().getTime().toString(); //上传时间戳
 
-        for (let i = 0; i < files.length; i++) {
-            
+        //存放文件目录
+        const saveDir = path.join(
+            __dirname,
+            "../public",
+            "zipfiles",
+            callDate,
+            callStamp
+        );
 
-            const file = files[i];
-            
-            if (file.success == true) {
-                pushZip(zip, path.resolve(__dirname, file.outputPath))
-                console.log(path.resolve(__dirname, file.outputPath))
-            } else {
-                continue;
-            }
+        mkdirsSync(saveDir);
+        rmdirsSync(saveDir);
+
+        for (let i = 0; i < filesObj.length; i++) {
+
+            const file = filesObj[i];
+
+            const filePath = path.join(
+                __dirname,
+                "../public",
+                file.outputPath
+            );
+
+            zip.file(file.filename, fs.readFileSync(filePath));
         }
-        // pushZip(zip, path.resolve(__dirname, './test'));
 
         zip.generateAsync({
             type: 'nodebuffer',
@@ -27,30 +42,14 @@ const FileZip = ({ files }) => {
             compressionOptions: {
                 level: 9
             }
-        }).then(function (content) {
-            console.log(content)
-            
-            fs.writeFile(path.resolve(__dirname, './output.zip'), content, err => {
+        }).then(function(content) {
+            fs.writeFile(path.resolve(saveDir, 'output.zip'), content, err => {
                 if (err) throw err;
-                console.log('文件已被保存');
+                resolve(`/zipfiles/${callDate}/${callStamp}/output.zip`)
             });
-
-            resolve(123)
-        });
-
-        function pushZip(floder, pPath) {
-            const files = fs.readdirSync(pPath, { withFileTypes: true });
-            files.forEach((dirent, index) => {
-                let filePath = `${pPath}/${dirent.name}`;
-                if (dirent.isDirectory()) {
-                    let zipFloder = zip.folder(filePath.replace(`${__dirname}\\prod/`, ''));
-                    pushZip(zipFloder, filePath);
-                } else {
-                    floder.file(dirent.name, fs.readFileSync(filePath));
-                }
-            });
-        }
-
+        }).catch(err => {
+            reject(err);
+        })
     })
 }
 

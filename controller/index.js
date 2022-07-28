@@ -1,4 +1,4 @@
-const upload = require('./upload');
+const imgZip = require('./imgzip');
 const fileZip = require('./filezip');
 
-module.exports = { upload, fileZip }
+module.exports = { imgZip, fileZip }
