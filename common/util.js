@@ -27,6 +27,7 @@ function mkdirsSync(dirname) {
 function rmdirsSync(dirname, timer = 12 * 60 * 60 * 1000) {
 
     setTimeout(() => {
+        
         let files = fs.readdirSync(dirname)
         for (var i = 0; i < files.length; i++) {
             let newPath = path.join(dirname, files[i]);

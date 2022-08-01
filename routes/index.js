@@ -25,7 +25,6 @@ router.post('/getzip', async function(req, res, next) {
             data: zipedFilePath
         });
     } catch (err) {
-        console.log(333)
         process.env.NODE_ENV === 'development' && console.log(err);
         next(createError(500, err));
     }
